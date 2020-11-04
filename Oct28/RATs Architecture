@@ -1,0 +1,277 @@
+describes interaction models for remote attestation
+procedures (RATS). Three conveying mechanisms 
+- Challenge/Response,
+- Uni-Directional, and 
+- Streaming Remote Attestation
+
+
+Goal of attestation == verifier's create attestation results about Attester's system component characteristics
+
+assessment on verifiers part is done on the basis of attestation policies and evidence 
+
+Interaction Models useful for RATS related solution documents!!!
+
+Looking at conveyance methods for attestation evidence from an attester to a verifier ( trustworthy and privacy preserving ) == looking at software based RATs issues maybe???
+
+
+can be decoupled system sharing info that is evidence == conceptual message 
+local == same entity == e.g same board maybe?? def TEE's, baseboard management controllers, embedded secure elements n TPMs
+
+LAYERED ATTESTATION ==  https://tools.ietf.org/id/draft-ietf-rats-architecture-02.html
+
+     	       .----------.                    .----------.
+               |          |                    |          |
+               | Endorser |------------------->| Verifier |
+               |          |    Endorsements    |          |
+               '----------'  for A, B, and C   '----------'
+                                                     ^
+           .------------------------------------.    |
+           |                                    |    |
+           |   .---------------------------.    |    |
+           |   | Target                    |    |    | Layered
+           |   | Environment               |    |    | Evidence
+           |   | C                         |    |    |   for
+           |   '---------------------------'    |    | B and C
+           |           Collect |                |    |
+           |           claims  |                |    |
+           |   .---------------|-----------.    |    |
+           |   | Target        v           |    |    |
+           |   | Environment .-----------. |    |    |
+           |   | B           | Attesting | |    |    |
+           |   |             |Environment|-----------'
+           |   |             |     B     | |    |
+           |   |             '-----------' |    |
+           |   |                     ^     |    |
+           |   '---------------------|-----'    |
+           |           Collect |     | Evidence |
+           |           claims  v     |  for B   |
+           |                 .-----------.      |
+           |                 | Attesting |      |
+           |                 |Environment|      |
+           |                 |     A     |      |
+           |                 '-----------'      |
+           |                                    |
+           '------------------------------------'
+
+
+
+Direct Anonymous Attestation
+1. signature scheme with aim to protect privacy
+2. does so by grouping signatures, and no one can know individual signers
+3. uses a public/private key pair and makes it available to the verifier to validate the DAA signature obtained
+4. the signature is part of the evidence
+
+An attester group has a single public key associated to it and thus th DAA issuer's public key cert is now the replacement for the individual attester identity documents used during authenticity validation during appraisal. 
+
+Intuitively ==> every device has a unique attester identity
+
+
+Endorsers (picks from layered attestation)
+When an attester is appraised it can be elevated to become a new Attesting Environment. The root of trust, however, cannot be an attester that has generated its own evidence about its own RoT, which it can't. 
+
+Endorsements are statements that the verifier requires from this subset of Attesting Environments which are not from the attester itself. These originate from an endorser that is external, and a trustable entitiy.
+
+Endorser:  An entity (typically a manufacturer) whose Endorsements
+      help Verifiers appraise the authenticity of Evidence
+
+
+For DAA, endorsers take the responsibility to issue zero-knowledge proofs ==> based on public key certificates for a group of attesters. Certificates are different to Endorsements.
+
+The bottomline is that the attester cannot create zero-knowledge proofs and need the involvement of a third party that is external to the attestation but is verifiably trustworthy, e.g, an endorser. 
+
+Prerequisites
+
+1. 
+
+
+
+
+Challenge/Response  Remote Attestation
+
+.----------.                                                .----------.
+| Attester |                                                | Verifier |
+'----------'                                                '----------'
+     |                                                            |
+     |                                                            |
+valueGeneration(targetEnvironment)                                |
+     | => claims                                                  |
+     |                                                            |
+     | <------requestEvidence(handle, authSecIDs, claimSelection) |
+     |                                                            |
+claimsCollection(claimSelection)                                  |
+     | => collectedClaims                                         |
+     |                                                            |
+evidenceGeneration(handle, authSecIDs, collectedClaims)           |
+     | => evidence                                                |
+     |                                                            |
+     | returnEvidence-------------------------------------------> |
+     | returnEventLog-------------------------------------------> |
+     |                                                            |
+     |                  evidenceAppraisal(evidence, eventLog, refClaims)
+     |                                       attestationResult <= |
+     |                                                            |
+Initiated by Verifier
+
+Verifier sends a request to an attester which includes a Handle,  a list of Authentication Secret IDs, and a Claim Selection.
+
+Handle has qualifying data which is randomly generated and thus unpredicatable (nonce) ==> freshness
+
+The list of auth ID's selects attestation keys to sign the attestation evidence ==> each trusted environment has its own key
+
+BUT ==> mappings exist in a composite device ==> more research required
+
+
+
+                      .-----------------------------.
+                      |           Verifier          |
+                      '-----------------------------'
+                                      ^
+                                      |
+                                      | Evidence of
+                                      | Composite Device
+                                      |
+   .----------------------------------|-------------------------------.
+   | .--------------------------------|-----.      .------------.     |
+   | |  Collect             .------------.  |      |            |     |
+   | |  Claims   .--------->|  Attesting |<--------| Attester B |-.   |
+   | |           |          |Environment |  |      '------------. |   |
+   | |  .----------------.  |            |<----------| Attester C |-. |
+   | |  |     Target     |  |            |  |        '------------' | |
+   | |  | Environment(s) |  |            |<------------| ...        | |
+   | |  |                |  '------------'  | Evidence '------------' |
+   | |  '----------------'                  |    of                   |
+   | |                                      | Attesters               |
+   | | lead Attester A                      | (via Internal Links or  |
+   | '--------------------------------------' Network Connections)    |
+   |                                                                  |
+   |                       Composite Device                           |
+   '------------------------------------------------------------------'
+
+
+
+Claim Selection selects the data required to create evidence. Omitted == all claims used to create corresponding evidence
+e.g. in a boot integrity eval, only a subset of of claims maybe requested from the attester which includes only information on the BIOS and firmware and not all software  
+
+Claim:  A piece of asserted information, often in the form of a name/
+      value pair.  (Compare /claim/ in [RFC7519])
+
+As soon as the Verifier receives signed Evidence, it validates the
+signature, the Attester Identity, as well as the Nonce, and appraises
+the Claims. Appraisal procedures are application-specific and can be
+conducted via comparison of the Claims with corresponding Reference
+Claims, such as Reference Integrity Measurements. The final output
+of the Verifier are Attestation Results. Attestation Results
+constitute new Claims Sets about an Attester’s properties and
+characteristics that enables Relying Parties, for example, to assess an 
+Attester’s trustworthiness.
+
+
+
+
+Uni-Directional Remote Attestation
+
+.----------.                                                .----------.
+| Attester |                                                | Verifier |
+'----------'                                                '----------'
+     |                                                           
+                             |
+     | => claims                                                  |
+     |                                                            |
+     |                   .--------------------.                   |
+     | <----------handle |                    |                   |
+     |                   | Handle Distributor |                   |
+     |                   |                    | handle----------> |
+     |                   '--------------------'                   |
+     |                                                            |
+evidenceGeneration(handle, authSecIDs, collectedClaims)           |
+     | => evidence                                                |
+     |                                                            |
+     | pushEventLog---------------------------------------------> |
+     | pushEvidence---------------------------------------------> |
+     |                                                            |
+     |                   appraiseEvidence(evidence, eventLog, refClaims)
+     |                                       attestationResult <= |
+     ~                                                            ~
+     |                                                            |
+valueGeneration(targetEnvironment)                                |
+     | => claimsDelta                                             |
+     |                                                            |
+evidenceGeneration(handle, authSecIDs, collectedClaims)           |
+     | => evidence                    
+This model feels prone to time based attacks mentioned in the WSN's reading ==> more research required                            |
+     |                                                            |
+     | pushEventLogDelta----------------------------------------> |
+     | pushEvidence---------------------------------------------> |
+     |                                                            |
+     |              appraiseEvidence(evidence, eventLogDelta, refClaims)
+     |                                       attestationResult <= |
+     |                                                            |
+Can be initiated both by the attester and by the verifier
+UML diagram shows initiation of conveyance by the attester
+
+
+Unsolicited Pushes of evidence == initiated by the attester ==> to the verifier
+Solicited Pushes of evidence     == initiated by the verifier
+
+
+Important ==> Handle creation
+Composed of trustable signed timestamps + other qualification data
+Handles are created by a 3rd party and can employ timestamps from local clocks, as well as relative clocks
+
+Timestamps are cryptographically bound to fresh handles received from the Handle Distributor, which ensures synchronization proofs which are included in evidence that is created by an attester.
+
+https://tools.ietf.org/id/draft-birkholz-rats-tuda-02.html#rfc.section.1 ==> due reading for TUDA
+
+
+evidence has proof of freshness at a certain point in time ==> can be pushed to multiple verifiers
+
+This model feels prone to time based attacks mentioned in the WSN's reading ==> more research required
+
+
+Streaming Remote Attestation
+
+.----------.                                                .----------.
+| Attester |                                                | Verifier |
+'----------'                                                '----------'
+     |                                                            |
+valueGeneration(targetEnvironment)                                |
+     | => claims                                                  |
+     |                                                            |
+     | <----subscribeEvidence(handle, authSecIDs, claimSelection) |
+     | subscriptionResult --------------------------------------> |
+     |                                                            |
+evidenceGeneration(handle, authSecIDs, collectedClaims)           |
+     | => evidence                                                |
+     |                                                            |
+     | pushEventLog---------------------------------------------> |
+     | pushEvidence---------------------------------------------> |
+     |                                                            |
+     |                  evidenceAppraisal(evidence, eventLog, refClaims)
+     |                                       attestationResult <= |
+     ~                                                            ~
+     |                                                            |
+valueGeneration(targetEnvironment)                                |
+     | => claimsDelta                                             |
+     |                                                            |
+evidenceGeneration(handle, authSecIDs, collectedClaims)           |
+     | => evidence                                                |
+     |                                                            |
+     | pushEventLogDelta----------------------------------------> |
+     | pushEvidence---------------------------------------------> |
+     |                                                            |
+     |             evidenceAppraisal(evidence, eventLogDelta, refClaims)
+     |                                       attestationResult <= |
+     |                                                            |
+
+
+
+
+
+
+
+
+
+
+
+
+
