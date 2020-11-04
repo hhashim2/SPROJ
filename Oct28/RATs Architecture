@@ -267,6 +267,10 @@ evidenceGeneration(handle, authSecIDs, collectedClaims)           |
 
 
 
+References
+https://datatracker.ietf.org/doc/draft-ietf-rats-reference-interaction-models/?include_text=1
+https://datatracker.ietf.org/doc/draft-ietf-rats-architecture/?include_text=1
+
 
 
 
