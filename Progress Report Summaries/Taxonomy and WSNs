@@ -128,5 +128,6 @@ extension of this procedure where the prover also sends data regarding its proce
 CPU cache or performance counter. However, as this information is not used in the hash computation, once an 
 adversary eavesdrops a valid response, it could simply extract this part and replay it.
 
-
+Reference:
+Rodrigo Vieira Steiner and Emil Lupu. 2016. Attestation in Wireless Sensor Networks: A Survey. ACM Comput. Surv.49, 3, Article 51 (December 2016), 31 pages. DOI:https://doi.org/10.1145/2988546
 
