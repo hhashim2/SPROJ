@@ -77,12 +77,13 @@ Endorser:  An entity (typically a manufacturer) whose Endorsements
 
 For DAA, endorsers take the responsibility to issue zero-knowledge proofs ==> based on public key certificates for a group of attesters. Certificates are different to Endorsements.
 
-The bottomline is that the attester cannot create zero-knowledge proofs and need the involvement of a third party that is external to the attestation but is verifiably trustworthy, e.g, an endorser. 
+The bottomline is that the attester cannot create zero-knowledge proofs and needs the involvement of a third party that is external to the attestation but is verifiably trustworthy, e.g, an endorser. 
 
 Prerequisites
 
-1. 
-
+1. Attester Identity: source of evidence with regards to an attesting environment ==> correct and unambiguous 
+2. Attestation Evidence Authenticity: existence of crypto directives proving the correctness ==> association to a PKIX certificate or key material
+3. 
 
 
 
@@ -216,7 +217,7 @@ Solicited Pushes of evidence     == initiated by the verifier
 
 Important ==> Handle creation
 Composed of trustable signed timestamps + other qualification data
-Handles are created by a 3rd party and can employ timestamps from local clocks, as well as relative clocks
+Handles are created by a 3rd party (handle distributor) and can employ timestamps from local clocks, as well as relative clocks
 
 Timestamps are cryptographically bound to fresh handles received from the Handle Distributor, which ensures synchronization proofs which are included in evidence that is created by an attester.
 
@@ -262,19 +263,24 @@ evidenceGeneration(handle, authSecIDs, collectedClaims)           |
      |             evidenceAppraisal(evidence, eventLogDelta, refClaims)
      |                                       attestationResult <= |
      |                                                            |
+The creation of a subscription state is similar to the handle distributor in the uni-directional mode ==> subscribe operation is responsible for the handles to be conveyed for evidence generation.
+
+Limitation ==> each verifier is to create and provide its individual handle ==> constrained to bilateral relationships which implies that handles provided by a verifier must be used in the generation of evidence for that verifier in specific.
+
+Timing considerations not given importance here!
+
+
+
+
 
 
 
 
 
 References
-https://datatracker.ietf.org/doc/draft-ietf-rats-reference-interaction-models/?include_text=1
-https://datatracker.ietf.org/doc/draft-ietf-rats-architecture/?include_text=1
-
-
-
-
-
+https://tools.ietf.org/pdf/draft-ietf-rats-reference-interaction-models-01.pdf
+https://github.com/Fraunhofer-SIT/charra
+https://tools.ietf.org/pdf/draft-ietf-rats-architecture-07.pdf
 
 
 

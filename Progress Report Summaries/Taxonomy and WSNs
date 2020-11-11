@@ -1,0 +1,132 @@
+It is generally assumed that the Verifier knows, in advance, the correct internal
+state—the memory contents—of the Prover. Therefore, the Verifier challenges the
+Prover to demonstrate that it is in a valid, expected, state. The Prover then executes
+an attestation routine, which will compute and send back a response based on the
+challenge received from the verifier and its internal state. The Verifier compares the
+answer received from the prover with the expected one, and if there is a match, then it
+can assert that the device has not been compromised. However, the Verifier only awaits
+the prover’s response for a limited amount of time TA, which must be at least as long
+as the time taken by the Prover to execute the genuine attestation routine. If the time
+difference between receiving the response and issuing the challenge, TR − TC, exceeds
+TA, then the Verifier knows something may be wrong with the Prover. Note here that
+when performing attestation over a network, the time delay to send and receive 
+messages must also be taken into account. As we will discuss further in 
+Section 3, there are two different approaches regarding timing control: strict and loose.
+
+
+We are not the first to analyse the attestation process. Nonetheless, existing analyses
+are built under different assumptions. For example, [Datta et al. 2009], [Coker et al.
+2011] and [Francillon et al. 2014] assume that the verifier and the prover need to
+share some secret information, e.g., a cryptographic key. They presume that this secret
+is defined prior to network deployment and that there exists some hardware support
+preventing the adversary from accessing it. Their models, however, also do not consider
+timing requirements. On the other hand, [Armknecht et al. 2013] and [Li et al. 2014]
+focus on software-based attestation techniques that assume no hardware support and
+are only concerned with attesting the program’s memory. The analysis in [Li et al.
+2014] also covers approaches that completely erase the prover’s data memory. However,
+neither of them cover proposals that attempt to verify the data memory instead of
+simply wiping out its contents
+
+
+WSN's == pros and cons
+The simplified hardware and software architecture of sensor nodes has both a positive and negative
+side. As a consequence of their reduced storage space, there is less memory available
+for an adversary to explore. Furthermore, differently from general-purpose computers,
+each node has a well-defined application to execute. Thus, it is easier to know what
+are the expected memory contents of these devices. Moreover, sensor nodes are usually
+equipped with single-core processors and have a single flow of execution, which reduces
+the possibilities of an adversary to perform parallel operations during attestation. On
+the downside, the limited amount of energy powering sensor nodes is certainly one of
+the biggest restrictions imposed. The fact that the sensors may be placed in hostile environments 
+and communicate over a wireless channel which may suffer from external
+interference is another complicator.
+
+System Model
+There are three entities that need to be considered when modeling an attestation
+mechanism: the verifier V , the prover P, and the adversary A. Although attestation
+mechanisms can be applied to other scenarios, we focus here only on WSNs. Therefore,
+both the verifier and the prover are wireless sensor nodes. The verifier can possess
+more computational power than common network nodes, but this is not mandatory.
+Meanwhile, the adversary is either launching attacks remotely or using an already
+compromised network node
+
+A prover P has an internal state State(P) = S that reflects the contents of its memory M. 
+Ideally, all memory contents should be attested including the program memory
+Mp, data memory Md, registers Mr, MMIO Mmmio, and even external memories Me.
+However, each of the different attestation mechanisms covers different sections of the
+memory, and in practice, some parts of M are left unverified. For instance, [Spinellis
+2000] only checks Mp, while [Zhang and Liu 2010] partially validates Md and nothing
+else. For simplicity, we consider (as reflected in the adopted notation) that the state S
+of a prover P corresponds only to the portions of memory being attested.
+
+
+In practice, attestation only provides a probabilistic guarantee of the integrity of a prover. 
+In this work, we aim to identify the factors that influence this probability
+
+
+
+assumptions about verifier
+1. cannot be compromised itself by the attacker; exception distributed attestation ==> all  nodes are verifiers
+2. knows expected state of the prover ==> issue each node with a certificate of its valid config ??? TPM logic?
+3. knows hardware arch. of the prover ==> imp to make valid assumptions about integrity of ATTEST
+4. The adversary can reverse engineer the prover’s software and hardware
+5. The adversary has full control of the prover’s memory
+6. The adversary cannot modify the prover’s hardware.
+
+4 and 5 assume that there exists no hardware controls to protect the prover's memory, and any data that could be cryptographic keys cannot be trusted since they are in unprotected memory.
+
+
+
+"There is more to the process of attestation than the use or not of tamper resistant hardware. "
+
+Taxonomy
+TPM's ==> only manage to verify the program memory of the prover == susceptible to ROP attacks where only call stack needs to be altered
+
+Evidence 
+Acquisition
+Trustable evidence and using it to draw conclusions on the prover's integrity.
+
+1. Hardware Based Attestation
+TPM's and PUF's (physical unclonable functions) used as hardware support in the remote attestation process
+
+e.g. Tan et al. 2015
+all sensor nodes have a TPM which possess the ability to store crypto keys for use in communication with neighboring nodes and the base station
+
+the protocol follows the TPM based implementation which is as follows:
+i. node transfers control to its bootloader which cannot have any updates to its code post-deployment
+ii. each node hashes the bootloader and stores it in the PCR and seals the keys into the TPM
+iii. bootloader upon being called upon computes a hash on itself and if hash differs ==> TPM does not provide info and cannot compute valid evidence for the verifier.
+iv. verifier uses the shared key and encrypts random data and sends to the attester == also gets the hash value from the attester and the attester's public key
+v. the attester decrypts the data it received and passes it as a nonce to the TPM and produces a response based on the output of the TPM == can only be correct if application code is not altered
+
+Only proved that program memory of the prover is not altered
+
+2. Software Based Attestation
+relies on an unforgeable attestation routine ==> but not necessarily uncrackable
+
+i. verifier chooses two overlapping memory sections of the prover's program memory sth one covers the initial memory addresses and the other covers the ends but have a common overlap somewhere between
+ii. prover and verifier individually compute hashes for these regions
+iii. computations are compared ==> any differences indicates modifications
+
+however, the issue stems from an attacker's ability to relocate malicious code to escape the current hash computation range. Moreover, computation of hashes in parallel and separately in nodes that are together can circumvent timing considerations by avoiding detection at all. 
+
+3. Hybrid Techniques
+completely fill up prover's writable memory with noise
+
+
+
+Integrity 
+Measurement
+
+
+Software Based Verification
+This, however, is based on the assumption that the attacker cannot interrupt the verification process and move the 
+malware around, always relocating it to somewhere out of the current hash computation range. 
+Moreover, as the hash computations are independent of one another, colliding nodes could compute 
+them separately and in parallel to avoid detection by timing differences. Spinellis also describes an 
+extension of this procedure where the prover also sends data regarding its processor state, such as the
+CPU cache or performance counter. However, as this information is not used in the hash computation, once an 
+adversary eavesdrops a valid response, it could simply extract this part and replay it.
+
+
+
